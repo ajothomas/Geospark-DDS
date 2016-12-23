@@ -56,20 +56,21 @@ import java.util.List;
  */
 public class Approach2 implements Serializable{
     public static Logger logObj = Logger.getLogger(Trial2.class.getName());
+    public static int startDays = 1;
     public static int totalDays = 5;
 
-    public static int returnAttribute(Envelope env, Map hm){
+    public static double returnAttribute(Envelope env, Map<Envelope,Double> hm){
         if(hm.containsKey(env)){
-            logObj.info("############################# "+env+" : "+(int)hm.get(env));
-            return (int)hm.get(env);
+            logObj.info("############################# "+env+" : "+hm.get(env));
+            return hm.get(env);
         }
         else{
-            logObj.info("############################# "+env+" : "+0);
-            return 0;
+            logObj.info("############################# "+env+" : "+0.0);
+            return 0.0;
         }
     }
 
-    public static double returnWeight(Envelope env, Map hm){
+    public static double returnWeight(Envelope env, Map<Envelope,Double> hm){
         if(hm.containsKey(env))
             return 1.0;
         else
@@ -77,15 +78,15 @@ public class Approach2 implements Serializable{
     }
 
 
-    public static double sumFunction(ArrayList<Integer> arr , String operation){
+    public static double sumFunction(ArrayList<Double> arr , String operation){
         double sum = 0.0;
         if(operation.toLowerCase().trim().equalsIgnoreCase("normalsum")) {
-            for(int element:arr)
-                sum+=(double)element;
+            for(double element:arr)
+                sum+=element;
         }
         else {
-            for(int element:arr){
-                double sqr = element*element;
+            for(double element:arr){
+                double sqr = (element*element);
                 sum += sqr;
             }
         }
@@ -93,8 +94,8 @@ public class Approach2 implements Serializable{
         return sum;
     }
 
-    public static ArrayList<Integer> getAttributeNeighbours(Envelope env, Map hm) {
-        ArrayList<Integer> attributeValues = new ArrayList<>();
+    public static ArrayList<Double> getAttributeNeighbours(Envelope env, Map<Envelope,Double> hm) {
+        ArrayList<Double> attributeValues = new ArrayList<>();
         double x1 = env.getMinX();
         double y1 = env.getMinY();
         attributeValues.add(returnAttribute(env, hm));
@@ -109,8 +110,8 @@ public class Approach2 implements Serializable{
         attributeValues.add(returnAttribute(new Envelope(x1-1, x1   , y1+1, y1+2 ), hm));
         attributeValues.add(returnAttribute(new Envelope(x1  , x1+1 , y1+1, y1+2 ), hm));
         attributeValues.add(returnAttribute(new Envelope(x1+1, x1+2 , y1+1, y1+2 ), hm));
-        int s=0;
-        for(int att:attributeValues){
+        double s=0.0;
+        for(double att:attributeValues){
             s+=att;
         }
 
@@ -118,7 +119,7 @@ public class Approach2 implements Serializable{
         return attributeValues;
     }
 
-    public static double getNeighborWeight(Envelope env, Map hm) {
+    public static double getNeighborWeight(Envelope env, Map<Envelope,Double> hm) {
         double totalWeight = 0.0;
         double x1 = env.getMinX();
         double y1 = env.getMinY();
@@ -188,26 +189,26 @@ public class Approach2 implements Serializable{
         JavaRDD<NewPoint> DatePoints = DatePointRDDObj.getRawDatePointRDD();
         //JavaRDD<NewEnvelope> DateRectangles = DateRectangleRDDObj.getRawDateRectangleRDD();
 
-        HashMap < Integer, Map<Envelope, Integer>> Grid3D = new HashMap< >();
+        HashMap < Integer, Map<Envelope, Double>> Grid3D = new HashMap< >();
 
-        for(int i=1; i<=totalDays; i++){
-            Map<Envelope, Integer> Grid2D = new HashMap<>( );
+        for(int i=startDays; i<=totalDays; i++){
+            Map<Envelope, Double> Grid2D = new HashMap<>( );
             for (double j = 4050; j<=4089; j+=1){
                 for (double k = -7425; k <= -7369; k += 1) {
                     double x1 = j;
                     double y1 = k;
                     Envelope env = new Envelope(x1, x1+1, y1, y1+1);
-                    Grid2D.put(env,0);
+                    Grid2D.put(env,0.0);
                 }
             }
             Grid3D.put(i,Grid2D);
         }
 
-        long sum = 0;
-        for(int i=1;i<=totalDays;i++) {
+        double sum = 0;
+        for(int i=startDays;i<=totalDays;i++) {
             //PointRDD point = DatePoints.filter(s->s.getDateStep()==i);
             final int j = i;
-            Map<Envelope, Integer> Grid2D = Grid3D.get(i);
+            Map<Envelope, Double> Grid2D = Grid3D.get(i);
 
             JavaRDD<NewPoint> DatePoints2 = DatePoints.filter(new Function<NewPoint, Boolean>() {
                 @Override
@@ -224,7 +225,7 @@ public class Approach2 implements Serializable{
                 }
             });
 
-            logObj.info("################ : "+i+":"+DatePoints3.count());
+            sum = sum+ (int)DatePoints3.count();
 
             List<Point> pointsAtTime = DatePoints3.collect();
             for(Point eachPoint:pointsAtTime){
@@ -232,7 +233,7 @@ public class Approach2 implements Serializable{
                 double y1 = eachPoint.getY();
                 Envelope env = new Envelope(x1, x1+1, y1, y1+1);
                 if(Grid2D.containsKey(env)){
-                    int val = (int)Grid2D.get(env)+1;
+                    double val = Grid2D.get(env)+1.0;
                     Grid2D.put(env,val);
 
                     //sum += (long)Grid2D.get(env);
@@ -240,6 +241,7 @@ public class Approach2 implements Serializable{
             }
             Grid3D.put(i,Grid2D);
         }
+
         /*
         Map<Envelope, Integer> Grid2D = Grid3D.get(2);
         Envelope checkEnv = new Envelope((double)4064, (double)4065, (double) -7388,(double) -7387);
@@ -294,36 +296,53 @@ public class Approach2 implements Serializable{
 
         */
 
-        /*Calculating the Z-Score*/
+        double sum1 = 0;
+        for(int i=startDays; i<=totalDays; i++) {
+            Map<Envelope, Double> Grid2D = Grid3D.get(i);
+            for (double j = 4050; j<=4089; j+=1) {
+                for (double k = -7425; k <= -7369; k += 1) {
+                    double x1 = j;
+                    double y1 = k;
+                    Envelope referenceEnv = new Envelope(x1, x1+1, y1, y1+1);
+                    sum1 = sum1 + Grid2D.get(referenceEnv);
+                }
+            }
+        }
 
+
+        /*
+        Calculating the Z-Score
+        */
         Map<Double,String> results = new TreeMap<>(Collections.reverseOrder());
         int N = 70680;
+        //int N = 13680;
         //int N = 11400;
-
-        for(int i=1; i<=totalDays; i++){
+        double sum2 = 0.0;
+        for(int i=startDays; i<=totalDays; i++) {
             for (double j = 4050; j<=4089; j+=1) {
                 for (double k = -7425; k <= -7369; k += 1) {
                     double x1 = j;
                     double y1 = k;
                     double neighbourWeights = 0.0;
-                    ArrayList<Integer> attributeValues = new ArrayList< >();
+                    ArrayList<Double> attributeValues = new ArrayList< >();
 
                     Envelope referenceEnv = new Envelope(x1, x1+1, y1, y1+1);
 
-                    Map <Envelope, Integer> referenceEnvMap = Grid3D.get(i);
+                    Map <Envelope, Double> referenceEnvMap = Grid3D.get(i);
                     //logObj.info("###################"+referenceEnv+", "+referenceEnvMap.size()+","+referenceEnvMap.get(referenceEnv));
 
+                    sum2 = sum2 + returnAttribute(referenceEnv, referenceEnvMap);
                     neighbourWeights += getNeighborWeight(referenceEnv, referenceEnvMap);
                     attributeValues.addAll(getAttributeNeighbours(referenceEnv, referenceEnvMap));
 
-                    if(i>1) {
-                        Map <Envelope, Integer> referenceEnvM1Map = Grid3D.get(i-1);
+                    if(i>startDays) {
+                        Map <Envelope, Double> referenceEnvM1Map = Grid3D.get(i-1);
                         attributeValues.addAll(getAttributeNeighbours(referenceEnv, referenceEnvM1Map));
                         neighbourWeights += getNeighborWeight(referenceEnv, referenceEnvM1Map);
 
                     }
                     if (i<totalDays) {
-                        Map <Envelope, Integer> referenceEnvP1Map = Grid3D.get(i+1);
+                        Map <Envelope, Double> referenceEnvP1Map = Grid3D.get(i+1);
                         attributeValues.addAll(getAttributeNeighbours(referenceEnv, referenceEnvP1Map));
                         neighbourWeights += getNeighborWeight(referenceEnv, referenceEnvP1Map);
                     }
@@ -352,6 +371,11 @@ public class Approach2 implements Serializable{
 
         }
 
+
+        logObj.info("################### SUM 01 : " + sum1);
+        logObj.info("################### SUM 02 : " + sum);
+        logObj.info("################### SUM 03 : " + sum2);
+
         ArrayList<String> finalOutput = new ArrayList< >();
         Iterator it = results.entrySet().iterator();
         int i=0;
@@ -364,6 +388,7 @@ public class Approach2 implements Serializable{
         logObj.info("################ : Result size "+results.size());
         JavaRDD<String> finalOutputRDD = sc.parallelize(finalOutput);
         finalOutputRDD.saveAsTextFile(outputPath+"/finalOutput");
+
     }
 
     public static void main(String args[]) throws IOException {
@@ -378,7 +403,7 @@ public class Approach2 implements Serializable{
         formatInputCSV(sc, inputPath, outputPath);
 
         DatePointRDD DatePointRDDObj = new DatePointRDD(sc, outputPath+"/pointsData", 0, "csv");
-        logObj.info("################ : "+DatePointRDDObj.getRawDatePointRDD().count());
+        //logObj.info("################ : "+DatePointRDDObj.getRawDatePointRDD().count());
 
 //        DateRectangleRDD DateRectangleRDDObj = new DateRectangleRDD(sc, outputPath+"/rectangleData", 0, "csv");
 //        logObj.info("################ : "+DateRectangleRDDObj.getRawDateRectangleRDD().count());

@@ -44,9 +44,10 @@ import java.util.Iterator;
 
 public class Trial2 implements Serializable{
     public static Logger logObj = Logger.getLogger(Trial2.class.getName());
+    public static int startDays = 1;
+    public static int totalDays = 31;
 
-
-    public static int returnAttribute(Envelope env, Map hm){
+    public static int returnAttribute(Envelope env, Map hm) {
         if(hm.containsKey(env))
             return (int)hm.get(env);
         else
@@ -61,15 +62,15 @@ public class Trial2 implements Serializable{
     }
 
 
-    public static double sumFunction(ArrayList<Integer> arr , String operation){
-        double sum = 0.0;
+    public static int sumFunction(ArrayList<Integer> arr , String operation){
+        int sum = 0;
         if(operation.toLowerCase().trim().equalsIgnoreCase("normalsum")) {
             for(int element:arr)
-                sum+=(double)element;
+                sum+= element;
         }
         else {
-            for(int element:arr){
-                double sqr = element*element;
+            for(int element:arr) {
+                int sqr = element*element;
                 sum += sqr;
             }
         }
@@ -134,7 +135,7 @@ public class Trial2 implements Serializable{
         /*
         * Calculating attribute value
         * */
-        for(int i=1;i<=5;i++) {
+        for(int i=startDays;i<=totalDays;i++) {
             //PointRDD point = DatePoints.filter(s->s.getDateStep()==i);
             final int j = i;
 
@@ -226,9 +227,9 @@ public class Trial2 implements Serializable{
         */
 
         Map<Double,String> results = new TreeMap<>(Collections.reverseOrder());
-        //int N = 70680;
-        int N = 11400;
-        for(int i=1; i<=5; i++){
+        int N = 70680;
+        //int N = 11400;
+        for(int i=startDays; i<=totalDays; i++){
             for (double j = 4050; j<=4089; j+=1) {
                 for (double k = -7425; k <= -7369; k += 1) {
                     double x1 = j;
@@ -243,25 +244,25 @@ public class Trial2 implements Serializable{
 
                     neighbourWeights += getNeighborWeight(referenceEnv, referenceEnvMap);
                     attributeValues.addAll(getAttributeNeighbours(referenceEnv, referenceEnvMap));
-                    if(i>1) {
+                    if(i>startDays) {
                         Map <Envelope, Integer> referenceEnvM1Map = hm.get(i-1);
                         attributeValues.addAll(getAttributeNeighbours(referenceEnv, referenceEnvM1Map));
                         neighbourWeights += getNeighborWeight(referenceEnv, referenceEnvM1Map);
 
                     }
-                    if (i<5) {
+                    if (i<totalDays) {
                         Map <Envelope, Integer> referenceEnvP1Map = hm.get(i+1);
                         attributeValues.addAll(getAttributeNeighbours(referenceEnv, referenceEnvP1Map));
                         neighbourWeights += getNeighborWeight(referenceEnv, referenceEnvP1Map);
                     }
 
-                    double ns = sumFunction(attributeValues, "normalsum");
-                    double ss = sumFunction(attributeValues, "squaresum");
-                    double XBar = sumFunction(attributeValues, "normalsum")/N;
-                    double stdDev = Math.sqrt( (sumFunction(attributeValues, "squaresum")/N) - XBar*XBar );
+                    int ns = sumFunction(attributeValues, "normalsum");
+                    int ss = sumFunction(attributeValues, "squaresum");
+                    double XBar = (double)sumFunction(attributeValues, "normalsum")/((double)N);
+                    double stdDev = Math.sqrt( ((double)sumFunction(attributeValues, "squaresum")/((double)N)) - XBar*XBar );
 
                     double numerator = sumFunction(attributeValues, "normalsum") - XBar*neighbourWeights;
-                    double denominator = stdDev * Math.sqrt((N*neighbourWeights - neighbourWeights*neighbourWeights)/(N-1)) ;
+                    double denominator = stdDev * Math.sqrt((N*neighbourWeights - neighbourWeights*neighbourWeights)/((double)N-1.0)) ;
                     //logObj.info("##############"+referenceEnv.getMinX()+", "+referenceEnv.getMinY()+", "+i+", Xbar"+df.format(XBar)+", Neighbor Weights : "+df.format(neighbourWeights));
 
                     double zscore = 0.0;
@@ -352,7 +353,7 @@ public class Trial2 implements Serializable{
         // generating envelopes
         ArrayList <String> DayEnvelopeStr = new ArrayList< >();
 
-        for(int i=1; i<=5; i++){
+        for(int i=startDays; i<=totalDays; i++){
             for (double j = 4050; j<=4089; j+=1){
                 for (double k = -7425; k <= -7369; k += 1) {
                     DayEnvelopeStr.add( ""+i+","+ j +","+ k +","
